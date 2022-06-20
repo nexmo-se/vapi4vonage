@@ -39,6 +39,7 @@ export class v4v {
                     switch (event.body.type) {
                         case "text":
                         case "number":
+                        case "email":
                             els[0].value = event.body.answer;
                             break;
                         case "checkbox":
@@ -49,6 +50,10 @@ export class v4v {
                                 els[0].click();
                             }
                             break;
+                        default:
+                            els[0].value = event.body.answer;
+                            break;
+
                     }
                 }
             }

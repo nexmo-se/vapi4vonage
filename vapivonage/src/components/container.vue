@@ -44,6 +44,11 @@ export default {
           phrase: "Say a silly word",
         },
         {
+          name: "email",
+          type: "email",
+          phrase: "What is your email address?",
+        },
+        {
           name: "million",
           type: "checkbox",
           phrase: "Would you like me to give you a million dollars?",

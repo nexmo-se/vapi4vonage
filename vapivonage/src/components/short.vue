@@ -6,6 +6,10 @@
       <input name="silly" class="input" type="text" />
     </div>
     <div class="field">
+      <label class="label">Email </label>
+      <input size="40" name="email" class="input" type="text" />
+    </div>
+    <div class="field">
       <label class="label">Can I give you a million dollars? </label>
       <input name="million1" type="checkbox" />
     </div>
@@ -15,6 +19,7 @@
 
 <script>
 import { v4v } from "@/assets/js/vapi4vonage";
+//import { v4v } from "../../../lvapi4vonage.js";
 export default {
   name: "short",
   props: {},
@@ -25,6 +30,11 @@ export default {
           name: "silly",
           type: "text",
           phrase: "Say a silly word",
+        },
+        {
+          name: "email",
+          type: "email",
+          phrase: "What is your email address?",
         },
         {
           name: "million1",
@@ -41,6 +51,11 @@ export default {
   },
   created() {
     console.log("Vanilla test");
+    let answer = "Mark dot Birkeland at vonage.com";
+    let email = answer.replace(/\bdot\b/g, ".");
+    email = email.replace(/\bat\b/g, "@");
+    email = email.replace(/\s/g, "");
+    console.log("Result: " + email);
   },
   mounted() {},
   methods: {

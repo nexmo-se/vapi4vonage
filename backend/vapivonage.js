@@ -268,6 +268,14 @@ app.post("/asr", (req, res) => {
         let nums = answer.replace(/\D/g, '');
         console.log("Number conversion: " + nums);
         answer = '' + nums;
+    } else if (users[user].fields[state].type == "email") {
+        let email = answer.replace(/\bdot\b/g, ".");
+        email = email.replace(/\bat\b/g, "@");
+        email = email.replace(/\bad\b/g, "@");
+        email = email.replace(/\bunderscore\b/g, "_");
+        email = email.replace(/\s/g, "");
+        console.log("Email conversion: " + email);
+        answer = '' + email;
     } else if (users[user].fields[state].type != "text") {
         if (okValues.test(answer)) {
             answer = true;

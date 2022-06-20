@@ -3,15 +3,15 @@
     <button v-on:click="doCall">Click to Start</button>
     <div class="field">
       <label class="label">Favorite Color </label>
-      <input name="color" class="input" type="text" />
+      <input size="20" name="color" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Favorite Animal </label>
-      <input name="animal" class="input" type="text" />
+      <input size="20" name="animal" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Use Case </label>
-      <input name="usecase" class="input" type="text" />
+      <input size="40" name="usecase" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Can I give you a million dollars? </label>

@@ -3,19 +3,23 @@
     <button v-on:click="doCall">Click to Start</button>
     <div class="field">
       <label class="label">First Name </label>
-      <input name="first" class="input" type="text" />
+      <input size="20" name="first" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Last Name </label>
-      <input name="last" class="input" type="text" />
+      <input size="20" name="last" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Company </label>
-      <input name="company" class="input" type="text" />
+      <input size="30" name="company" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Phone Number </label>
-      <input name="phone" class="input" type="text" />
+      <input size="20" name="phone" class="input" type="text" />
+    </div>
+    <div class="field">
+      <label class="label">Email </label>
+      <input size="40" name="email" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Developer? </label>
@@ -56,6 +60,11 @@ export default {
           name: "phone",
           type: "number",
           phrase: "Please say your Phone Number, including the country code",
+        },
+        {
+          name: "email",
+          type: "email",
+          phrase: "What is your email address?",
         },
         {
           name: "developer",
