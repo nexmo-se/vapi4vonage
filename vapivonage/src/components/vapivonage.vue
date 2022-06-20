@@ -157,7 +157,6 @@ export default {
       });
     },
     submit() {
-      console.log("Developer? " + this.developer);
       alert("Form submitted!");
     },
   },

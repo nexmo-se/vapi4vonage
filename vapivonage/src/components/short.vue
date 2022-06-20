@@ -48,7 +48,6 @@ export default {
       v4v.doForm(this.fields);
     },
     submit() {
-      console.log("Developer? " + this.developer);
       alert("Form submitted!");
     },
   },

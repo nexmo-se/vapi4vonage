@@ -1,5 +1,4 @@
 import NexmoClient from 'nexmo-client';
-import axios from 'axios';
 const server_url = "https://vids.vonage.com/v4v";
 export class v4v {
     static async doForm(formDesc) {
@@ -9,23 +8,21 @@ export class v4v {
         var con;
         var client;
         var vapp;
-        const server = axios.create({
-            baseURL: server_url,
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-        await server
-            .post("/register", {
+        await fetch(server_url + "/register", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 id: id,
-                fields: formDesc,
+                fields: formDesc
             })
-            .then((result) => {
-                console.log("Registered!", result.data);
-                jwt = result.data.jwt;
-                con = result.data.con;
-                client = new NexmoClient();
-            });
+        }).then(async (result) => {
+            const body = await result.json();
+            console.log("Registered!", body);
+            jwt = body.jwt;
+            con = body.con;
+            client = new NexmoClient();
+        });
+        /**/
         vapp = await client.login(jwt);
         vapp.callServer("v4vid:" + id, "phone", {
             id: "" + id,
