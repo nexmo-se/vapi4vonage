@@ -10,7 +10,7 @@ const Vonage = require('@vonage/server-sdk');
 const { promisify } = require('util');
 var fs = require('fs');
 var okValues = new RegExp("yes|yeah|ok|sure|fine|yep|affirmative|submit|done", "i");
-const aclPaths = {
+const all_aclPaths = {
     "paths": {
         "/*/users/**": {},
         "/*/conversations/**": {},
@@ -24,7 +24,14 @@ const aclPaths = {
         "/*/legs/**": {}
     }
 }
-
+const aclPaths = {
+    "paths": {
+        "/*/conversations/**": {},
+        "/*/sessions/**": {},
+        "/*/knocking/**": {},
+        "/*/legs/**": {}
+    }
+}
 app.use(bodyParser.json());
 app.use('/', express.static(__dirname));
 
@@ -135,7 +142,7 @@ function startup() {
     return true;
 }
 function getJwt(name) {
-    const expiry = (new Date().getTime()) + (10 * 60000); // JWT good for 10 minutes
+    const expiry = Math.floor(((new Date().getTime()) / 1000) + (10)); // JWT good for 10 seconds
     let opts = {
         application_id: applicationId,
         sub: name,

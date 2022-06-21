@@ -19,7 +19,7 @@
     </div>
     <div class="field">
       <label class="label">Email </label>
-      <input size="40" name="email" class="input" type="text" />
+      <input size="40" name="email1" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Developer? </label>
@@ -62,7 +62,7 @@ export default {
           phrase: "Please say your Phone Number, including the country code",
         },
         {
-          name: "email",
+          name: "email1",
           type: "email",
           phrase: "What is your email address?",
         },
