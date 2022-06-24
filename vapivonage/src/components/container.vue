@@ -13,9 +13,9 @@
     </div>
     <pre style="text-align: left">
 <b style="text-align: left">For HTML input elements:</b>
-&lt;input id='silly' type='text' />
-&lt;input id="million" type="checkbox" />
-&lt;button id="done">Submit&lt;/button>
+&lt;input name='silly' type='text' />
+&lt;input name="million" type="checkbox" />
+&lt;button name="done">Submit&lt;/button>
 
 <b style="text-align: left">Sample structure passed to function:</b>
 {{ JSON.stringify(fields, undefined, 2) }}

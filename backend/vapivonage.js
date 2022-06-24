@@ -9,7 +9,7 @@ const expressWs = require('express-ws')(app);
 const Vonage = require('@vonage/server-sdk');
 const { promisify } = require('util');
 var fs = require('fs');
-var okValues = new RegExp("yes|yeah|ok|sure|fine|yep|affirmative|submit|done", "i");
+var okValues = new RegExp("yes|yeah|ok|sure|fine|yep|affirmative|submit|done|of course", "i");
 const all_aclPaths = {
     "paths": {
         "/*/users/**": {},
@@ -280,6 +280,16 @@ app.post("/asr", (req, res) => {
         email = email.replace(/\bat\b/g, "@");
         email = email.replace(/\bad\b/g, "@");
         email = email.replace(/\bunderscore\b/g, "_");
+        email = email.replace(/\bbee\b/g, "b");
+        email = email.replace(/\bsee\b/g, "c");
+        email = email.replace(/\bgee\b/g, "g");
+        email = email.replace(/\beye\b/g, "i");
+        email = email.replace(/\bjay\b/g, "j");
+        email = email.replace(/\bare\b/g, "r");
+        email = email.replace(/\btea\b/g, "t");
+        email = email.replace(/\byou\b/g, "u");
+        email = email.replace(/\beggs\b/g, "x");
+        email = email.replace(/\bwhy\b/g, "y");
         email = email.replace(/\s/g, "");
         console.log("Email conversion: " + email);
         answer = '' + email;
