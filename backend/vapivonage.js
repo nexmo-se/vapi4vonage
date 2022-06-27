@@ -9,6 +9,8 @@ const expressWs = require('express-ws')(app);
 const Vonage = require('@vonage/server-sdk');
 const { promisify } = require('util');
 var fs = require('fs');
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
+
 var okValues = new RegExp("yes|yeah|ok|sure|fine|yep|affirmative|submit|done|of course", "i");
 const all_aclPaths = {
     "paths": {
@@ -253,8 +255,9 @@ app.post("/asr", (req, res) => {
     } else {
         console.log("Something wrong with ASR: ", req.body)
         let user = req.query.user;
-        if (!users[user] || users[user].errors > 2) {
-            ncco.push(addPhrase("Thank you"));
+        if (users[user].errors > 1) {
+            ncco.push(addPhrase("Let's move on."));
+            users[user].errors = 0;
         } else {
             ncco.push(addPhrase("I'm sorry, I didn't catch that"));
             ncco.push(addPhrase(users[user].fields[users[user].state].phrase));
@@ -268,10 +271,47 @@ app.post("/asr", (req, res) => {
         ncco.push(addPhrase("Invalid user. Goodbye."));
         return res.status(200).json(ncco);
     }
-    users[user].errors = 0;
     let state = users[user].state;
-    var answer = req.body.speech.results[0].text
-    if (users[user].fields[state].type == "number") {
+    var answer = req.body.speech.results[0].text;
+    let obj = {};
+    if (users[user].fields[state].type == "phone") {
+        let nums = answer.replace(/\D/g, '');
+        let num = '+' + nums;
+        let valid = false;
+        try {
+            phoneUtil.isValidNumber(phoneUtil.parse(num))
+            valid = true;
+            let number = phoneUtil.parseAndKeepRawInput(num, '');
+            console.log("Parsed number: ", number);
+            let region = phoneUtil.getRegionCodeForNumber(number);
+            if (!region) {
+                valid = false;
+            } else {
+                console.log("Phone conversion: " + region);
+                answer = '' + nums;
+                obj.region = '' + region;
+                obj.local = '' + number.getNationalNumber();
+                obj.countrycode = '' + number.getCountryCode();
+                console.log("Phone returned obj: ", obj)
+            }
+        } catch (e) {
+            valid = false;
+        }
+        if (!valid) {
+            if (users[user].errors > 1) {
+                users[user].errors = 0;
+                ncco.push(addPhrase("Let's move on."));
+                answer = '';
+            } else {
+                console.log("Bad phone number!", num)
+                ncco.push(addPhrase("I'm sorry, that wasn't a valid phone number."));
+                ncco.push(addPhrase(users[user].fields[users[user].state].phrase));
+                ncco.push(getInput(user));
+                users[user].errors++;
+                return res.status(200).json(ncco);
+            }
+        }
+    } else if (users[user].fields[state].type == "number") {
         let nums = answer.replace(/\D/g, '');
         console.log("Number conversion: " + nums);
         answer = '' + nums;
@@ -301,13 +341,13 @@ app.post("/asr", (req, res) => {
         }
     }
     users[user].answers[state] = answer;
-    let obj = {
-        name: users[user].fields[state].name,
-        type: users[user].fields[state].type,
-        answer: users[user].answers[state]
-    }
+    obj.name = users[user].fields[state].name;
+    obj.type = users[user].fields[state].type;
+    obj.answer = users[user].answers[state];
+    obj.fields = users[user].fields[state];
     conAdd(user, obj, "custom:v4v");
     state++;
+    users[user].errors = 0;
     if (!users[user].fields[state]) {
         ncco.push(addPhrase("Thank you"));
         console.log("Answers: ");

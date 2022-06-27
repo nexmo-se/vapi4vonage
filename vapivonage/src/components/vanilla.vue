@@ -15,7 +15,7 @@
     </div>
     <div class="field">
       <label class="label">Phone Number </label>
-      <input size="20" name="phone" class="input" type="text" />
+      <input size="20" name="myphone" class="input" type="text" />
     </div>
     <div class="field">
       <label class="label">Email </label>
@@ -29,7 +29,7 @@
       <label class="label">Privacy ok? </label>
       <input name="privacy" type="checkbox" />
     </div>
-    <button name="done" v-on:click="submit">Submit</button>
+    <button name="done2" v-on:click="submit">Submit</button>
   </div>
 </template>
 
@@ -57,8 +57,8 @@ export default {
           phrase: "Please say your Company Name",
         },
         {
-          name: "phone",
-          type: "number",
+          name: "myphone",
+          type: "phone",
           phrase: "Please say your Phone Number, including the country code",
         },
         {
@@ -78,7 +78,7 @@ export default {
             "If you agree to be contacted via phone and email regarding your interest in our products and services please say Yes.",
         },
         {
-          name: "done",
+          name: "done2",
           type: "button",
           phrase:
             "If needed, edit the form on the screen, and press the Submit button. Otherwise, if everything looks right, simply say Yes.",

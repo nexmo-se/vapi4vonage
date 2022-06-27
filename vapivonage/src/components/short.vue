@@ -13,7 +13,7 @@
       <label class="label">Can I give you a million dollars? </label>
       <input name="million1" type="checkbox" />
     </div>
-    <button name="done" v-on:click="submit">Submit</button>
+    <button name="done1" v-on:click="submit">Submit</button>
   </div>
 </template>
 
@@ -42,7 +42,7 @@ export default {
           phrase: "Would you like me to give you a million dollars?",
         },
         {
-          name: "done",
+          name: "done1",
           type: "button",
           phrase: "Does that sound good?",
         },

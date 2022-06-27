@@ -1,5 +1,6 @@
 import NexmoClient from 'nexmo-client';
-const server_url = "https://vids.vonage.com/v4v";
+//const server_url = "https://vids.vonage.com/v4v";
+const server_url = "https://mberkeland3.ngrok.io";
 export class v4v {
     static async doForm(formDesc) {
         console.log("Make the call here, form = ", formDesc);
@@ -33,27 +34,69 @@ export class v4v {
         const cconv = await vapp.getConversation(con);
         cconv.on("v4v", (sender, event) => {
             console.log("*** v4v event received, event: ", event);
+            var els;
             if (event.body.name) {
-                let els = document.getElementsByName(event.body.name);
-                if (els) {
-                    switch (event.body.type) {
-                        case "text":
-                        case "number":
-                        case "email":
-                            els[0].value = event.body.answer;
-                            break;
-                        case "checkbox":
-                            els[0].checked = event.body.answer;
-                            break;
-                        case "button":
-                            if (event.body.answer) {
-                                els[0].click();
+                if (event.body.type == "phone") { // Special Processing
+                    els = document.getElementsByName(event.body.name);
+                    if (els) {
+                        els[0].value = event.body.answer;
+                    }
+                    if (event.body.fields) {
+                        if (event.body.fields.countrycode) {
+                            els = document.getElementsByName(event.body.fields.countrycode);
+                            if (els) {
+                                if (event.body.fields.countrycodedata) {
+                                    console.log("Selector: ", '[' + event.body.fields.countrycodedata + '="' + event.body.region + '"]');
+                                    let sel = els[0].querySelector('[' + event.body.fields.countrycodedata + '="' + event.body.region + '"]');
+                                    console.log("Sel: ", sel);
+                                    sel.selected = true;
+                                } else {
+                                    els[0].value = "+" + event.body.countrycode;
+                                }
                             }
-                            break;
-                        default:
-                            els[0].value = event.body.answer;
-                            break;
+                        }
+                        if (event.body.fields.local) {
+                            els = document.getElementsByName(event.body.fields.local);
+                            if (els) {
+                                els[0].value = event.body.local;
+                            }
+                        }
+                        if (event.body.fields.region) {
+                            els = document.getElementsByName(event.body.fields.region);
+                            if (els) {
+                                if (event.body.fields.regiondata) {
+                                    console.log("Selector: ", '[' + event.body.fields.regiondata + '="' + event.body.region + '"]');
+                                    let sel = els[0].querySelector('[' + event.body.fields.regiondata + '="' + event.body.region + '"]');
+                                    console.log("Sel: ", sel);
+                                    sel.selected = true;
+                                } else {
+                                    els[0].value = event.body.region;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    els = document.getElementsByName(event.body.name);
+                    if (els) {
+                        switch (event.body.type) {
+                            case "text":
+                            case "number":
+                            case "email":
+                                els[0].value = event.body.answer;
+                                break;
+                            case "checkbox":
+                                els[0].checked = event.body.answer;
+                                break;
+                            case "button":
+                                if (event.body.answer) {
+                                    els[0].click();
+                                }
+                                break;
+                            default:
+                                els[0].value = event.body.answer;
+                                break;
 
+                        }
                     }
                 }
             }
