@@ -1720,7 +1720,7 @@ export default {
     return {
       fields: [
         {
-          name: "cc",
+          name: "myphone",
           type: "phone",
           phrase: "Say your phone number, including the country code.",
           local: "local",
