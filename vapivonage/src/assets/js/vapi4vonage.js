@@ -1,8 +1,7 @@
 import NexmoClient from 'nexmo-client';
-//const server_url = "https://vids.vonage.com/v4v";
-const server_url = "https://mberkeland3.ngrok.io";
+const server_url = "https://vids.vonage.com/v4v";
 export class v4v {
-    static async doForm(formDesc) {
+    static async doForm(formDesc, intro = true) {
         console.log("Make the call here, form = ", formDesc);
         const id = new Date().getTime();
         var jwt;
@@ -14,7 +13,8 @@ export class v4v {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: id,
-                fields: formDesc
+                fields: formDesc,
+                intro: intro
             })
         }).then(async (result) => {
             const body = await result.json();
@@ -50,6 +50,7 @@ export class v4v {
                                     let sel = els[0].querySelector('[' + event.body.fields.countrycodedata + '="' + event.body.region + '"]');
                                     console.log("Sel: ", sel);
                                     sel.selected = true;
+                                    console.log("Set to: ", sel.selected)
                                 } else {
                                     els[0].value = "+" + event.body.countrycode;
                                 }
@@ -65,10 +66,13 @@ export class v4v {
                             els = document.getElementsByName(event.body.fields.region);
                             if (els) {
                                 if (event.body.fields.regiondata) {
-                                    console.log("Selector: ", '[' + event.body.fields.regiondata + '="' + event.body.region + '"]');
+                                    console.log("Region Selector: ", '[' + event.body.fields.regiondata + '="' + event.body.region + '"]');
                                     let sel = els[0].querySelector('[' + event.body.fields.regiondata + '="' + event.body.region + '"]');
-                                    console.log("Sel: ", sel);
+                                    console.log("Region Sel: ", sel);
+                                    console.log("R Set to: ", sel.selected)
                                     sel.selected = true;
+                                    console.log("R Then Set to: ", sel.selected)
+
                                 } else {
                                     els[0].value = event.body.region;
                                 }

@@ -225,7 +225,9 @@ app.get("/answer", (req, res) => {
     users[user].answers = [];
 
     ncco = [];
-    ncco.push(addPhrase("Welcome to the Vahnuhj Vahpee Form Filler."));
+    if (users[user].intro) {
+        ncco.push(addPhrase("Welcome to the Vahnuhj Vahpee Form Filler."));
+    }
     ncco.push(addPhrase(users[user].fields[0].phrase));
     ncco.push(getInput(user));
     console.log("Answer ncco: ", ncco)
@@ -385,6 +387,9 @@ app.post("/register", async (req, res) => {
                 }
                 users[name].uid = user.id;
             }
+            console.log("Undefined? " + (req.body.intro == undefined))
+            users[name].intro = ((req.body.intro == undefined) ? true : req.body.intro);
+            console.log("Using intro? " + users[name].intro);
             users[name].errors = 0;
             if (req.body.fields) {
                 users[name].fields = req.body.fields

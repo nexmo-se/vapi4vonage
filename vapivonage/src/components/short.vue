@@ -60,7 +60,7 @@ export default {
   mounted() {},
   methods: {
     doCall() {
-      v4v.doForm(this.fields);
+      v4v.doForm(this.fields, false);
     },
     submit() {
       alert("Form submitted!");
