@@ -38,7 +38,6 @@ app.use(bodyParser.json());
 app.use('/', express.static(__dirname));
 
 app.use(function (req, res, next) {
-    //console.log("in server...")
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header("Access-Control-Allow-Methods", "OPTIONS,GET,POST,PUT,DELETE");
@@ -92,7 +91,7 @@ const fields = [
 ];
 function startup() {
     try {
-        console.log("Private key: " + privateKey)
+        //console.log("Private key: " + privateKey)
         vonage = new Vonage({
             apiKey: apiKey,
             apiSecret: apiSecret,
@@ -137,7 +136,7 @@ function startup() {
             console.error(error);
         }
         else {
-            console.log(result.capabilities.voice);
+            console.log("Application webhooks updated");
         }
     });
     console.log("Vonage webhooks set to base: " + server_url);
@@ -151,7 +150,6 @@ function getJwt(name) {
         exp: expiry,
         acl: aclPaths
     };
-    console.log(opts)
     const njwt = Vonage.generateJwt(privateKey, opts);
     console.log("JWT length: ", njwt.length);
     return njwt;
@@ -168,20 +166,19 @@ async function conAdd(name, object, type) {
                 console.error(error);
             }
             else {
-                console.log("Conversation event created for convo " + users[name].conId);
-                console.log(result);
+                console.log("Conversation event created for convo " + users[name].conId, result.id);
             }
         }
     );
 }
-
-function addPhrase(phrase) {
+function addPhrase(phrase, bargeIn = true) {
     let obj = {
         action: "talk",
         text: phrase,
         style: 10,
         language: "en-US",
-        premium: true
+        premium: true,
+        bargeIn: bargeIn
     }
     return obj;
 }
@@ -218,7 +215,7 @@ app.get("/answer", (req, res) => {
             user: user
         }
     } else {
-        console.log("Got users[user]: ", users[user]);
+        console.log("Got users[user]: " + users[user].user);
     }
     users[user].uuid = req.query.uuid;
     users[user].state = 0;
@@ -230,11 +227,12 @@ app.get("/answer", (req, res) => {
     }
     ncco.push(addPhrase(users[user].fields[0].phrase));
     ncco.push(getInput(user));
-    console.log("Answer ncco: ", ncco)
+    ncco.push(addPhrase("Ok", false));
+    console.log("Answer ncco returned: ", ncco)
     return res.status(200).json(ncco);
 })
 app.post("/event", (req, res) => {
-    console.log("Got event!!!!", req.body);
+    console.log("Got event!!!!", (req.body.status ? req.body.status : req.body));
     return res.status(200).end();
 })
 app.post("/inbound", (req, res) => {
@@ -245,18 +243,32 @@ app.post("/status", (req, res) => {
     console.log("Got status!!!!", req.body);
     return res.status(200).end();
 })
-app.post("/asr", (req, res) => {
+app.post("/asr", async (req, res) => {
     var ncco = [];
+    let user = req.query.user;
+    if (!users[user]) {
+        ncco.push(addPhrase("Invalid user. Goodbye."));
+        return res.status(200).json(ncco);
+    }
     if (req.body.speech.results) {
-        console.log("Got asr!!!!", req.body.speech.results);
         if (!req.body.speech.results[0]) {
-            console.log("Got asr!!!!", req.body.speech);
-            ncco.push(addPhrase("Thank you"));
+            console.log("Got asr, without results!!!!", req.body.speech);
+            if (users[user].errors > 1) {
+                console.log("Done for now due to errors")
+                ncco.push(addPhrase("You may now complete the form manually.", false));
+                users[user].errors = 0;
+            } else {
+                ncco.push(addPhrase("I'm sorry, I didn't catch that", false));
+                ncco.push(addPhrase(users[user].fields[users[user].state].phrase, true));
+                ncco.push(getInput(user));
+                ncco.push(addPhrase("Ok", false));
+                users[user].errors++;
+            }
             return res.status(200).json(ncco);
         }
+        console.log("Got results with asr!!!!", req.body.speech.results[0]);
     } else {
         console.log("Something wrong with ASR: ", req.body)
-        let user = req.query.user;
         if (users[user].errors > 1) {
             ncco.push(addPhrase("Let's move on."));
             users[user].errors = 0;
@@ -264,13 +276,9 @@ app.post("/asr", (req, res) => {
             ncco.push(addPhrase("I'm sorry, I didn't catch that"));
             ncco.push(addPhrase(users[user].fields[users[user].state].phrase));
             ncco.push(getInput(user));
+            ncco.push(addPhrase("Ok", false));
             users[user].errors++;
         }
-        return res.status(200).json(ncco);
-    }
-    let user = req.query.user;
-    if (!users[user]) {
-        ncco.push(addPhrase("Invalid user. Goodbye."));
         return res.status(200).json(ncco);
     }
     let state = users[user].state;
@@ -284,7 +292,6 @@ app.post("/asr", (req, res) => {
             phoneUtil.isValidNumber(phoneUtil.parse(num))
             valid = true;
             let number = phoneUtil.parseAndKeepRawInput(num, '');
-            console.log("Parsed number: ", number);
             let region = phoneUtil.getRegionCodeForNumber(number);
             if (!region) {
                 valid = false;
@@ -309,6 +316,7 @@ app.post("/asr", (req, res) => {
                 ncco.push(addPhrase("I'm sorry, that wasn't a valid phone number."));
                 ncco.push(addPhrase(users[user].fields[users[user].state].phrase));
                 ncco.push(getInput(user));
+                ncco.push(addPhrase("Ok", false));
                 users[user].errors++;
                 return res.status(200).json(ncco);
             }
@@ -363,9 +371,8 @@ app.post("/asr", (req, res) => {
     users[user].state = state;
     ncco.push(addPhrase(users[user].fields[state].phrase));
     ncco.push(getInput(user));
-
+    ncco.push(addPhrase("Ok", false));
     return res.status(200).json(ncco);
-
 })
 app.post("/register", async (req, res) => {
     console.log("Got registration", req.body);
@@ -378,7 +385,7 @@ app.post("/register", async (req, res) => {
             display_name: name
         }, (error, user) => {
             if (error) console.log(error)
-            console.log("Got user: ", user)
+            console.log("Got user id: ", user.id)
             let jwt = getJwt(name);
             if (!users[name]) {
                 console.log("Creating user record for " + name + " : " + user.id);
@@ -387,7 +394,6 @@ app.post("/register", async (req, res) => {
                 }
                 users[name].uid = user.id;
             }
-            console.log("Undefined? " + (req.body.intro == undefined))
             users[name].intro = ((req.body.intro == undefined) ? true : req.body.intro);
             console.log("Using intro? " + users[name].intro);
             users[name].errors = 0;
@@ -403,7 +409,7 @@ app.post("/register", async (req, res) => {
             }, (error, result) => {
                 if (error) console.log(error);
                 if (result) {
-                    console.log("Con result:", result)
+                    //console.log("Con result:", result)
                     let con = result.id;
                     users[name].conId = con;
                     users[name].conName = cname;
