@@ -4,6 +4,7 @@
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
-    "express-ws": "^5.0.2"
+    "express-ws": "^5.0.2",
+    "google-libphonenumber": "^3.2.28"
   }
 }

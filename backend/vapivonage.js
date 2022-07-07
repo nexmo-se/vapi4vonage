@@ -331,6 +331,7 @@ app.post("/asr", async (req, res) => {
         email = email.replace(/\bad\b/g, "@");
         email = email.replace(/\bunderscore\b/g, "_");
         email = email.replace(/\bbee\b/g, "b");
+        email = email.replace(/\bbe\b/g, "b");
         email = email.replace(/\bsee\b/g, "c");
         email = email.replace(/\bgee\b/g, "g");
         email = email.replace(/\beye\b/g, "i");

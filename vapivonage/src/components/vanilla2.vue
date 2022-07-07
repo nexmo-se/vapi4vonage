@@ -1283,7 +1283,7 @@
     <div>
       <select
         id="country-365cafbe-0da8-459c-af1c-37310b4b5a75"
-        name="country"
+        name="country2"
         class="Vlt-form__select"
         required=""
         data-di-id="#country-365cafbe-0da8-459c-af1c-37310b4b5a75"
@@ -1726,7 +1726,7 @@ export default {
           local: "local",
           countrycode: "cc",
           countrycodedata: "data-country-code",
-          region: "country",
+          region: "country2",
           regiondata: "data-country-code",
         },
         {
