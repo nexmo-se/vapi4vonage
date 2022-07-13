@@ -173,12 +173,13 @@ async function conAdd(name, object, type) {
         }
     );
 }
-function addPhrase(phrase, bargeIn = true) {
+function addPhrase(phrase, language = lang, bargeIn = true) {
+    language = "en-US";
     let obj = {
         action: "talk",
         text: phrase,
         style: 10,
-        language: lang,
+        language: language,
         premium: true,
         bargeIn: bargeIn
     }
@@ -196,7 +197,7 @@ function getInput(user, type = "text") {
         eventUrl: [server_url + '/asr?user=' + user],
         speech: {
             endOnSilence: 1,
-            language: lang,
+            language: users[user].lang,
             uuid: [users[user].uuid],
             context: context,
         }
@@ -249,9 +250,9 @@ app.get("/answer", (req, res) => {
     if (users[user].intro) {
         ncco.push(addPhrase("Welcome to the Vahnuhj Vahpee Form Filler."));
     }
-    ncco.push(addPhrase(users[user].fields[0].phrase));
+    ncco.push(addPhrase(users[user].fields[0].phrase, users[user].lang));
     ncco.push(getInput(user, users[user].fields[0].type));
-    ncco.push(addPhrase("Ok", false));
+    //ncco.push(addPhrase("Ok", false));
     console.log("Answer ncco returned: ", ncco)
     return res.status(200).json(ncco);
 })
@@ -292,22 +293,23 @@ app.post("/transcript", (req, res) => {
         console.log("Invalid transcript user")
         return res.status(200).end();
     }
-    let accessToken = vonage.generateJwt();
-    request.get(req.body.transcription_url, {
-        headers: {
-            'Authorization': 'Bearer ' + accessToken,
-            "content-type": "application/json",
-        },
-        json: true,
-    }, function (error, response, body) {
-        console.log("Transcript (length = " + body.channels.length + "): ", body.channels[0].transcript)
-    })
     /*
+
+let accessToken = vonage.generateJwt();
+request.get(req.body.transcription_url, {
+    headers: {
+        'Authorization': 'Bearer ' + accessToken,
+        "content-type": "application/json",
+    },
+    json: true,
+}, function (error, response, body) {
+    console.log("Transcript (length = " + body.channels.length + "): ", body.channels[0].transcript)
+})
 vonage.files.save(req.body.transcription_url, "./" + user + ".txt", (err, res) => {
-    if (err) { console.error("Transcription error", err); }
-    else {
-        console.log("Saved transcription ", res);
-    }
+if (err) { console.error("Transcription error", err); }
+else {
+    console.log("Saved transcription ", res);
+}
 }
 )
 */
@@ -325,13 +327,13 @@ app.post("/asr", async (req, res) => {
             console.log("Got asr, without results!!!!", req.body.speech);
             if (users[user].errors > 1) {
                 console.log("Done for now due to errors")
-                ncco.push(addPhrase("You may now complete the form manually.", false));
+                ncco.push(addPhrase("You may now complete the form manually.", users[user].lang, false));
                 users[user].errors = 0;
             } else {
-                ncco.push(addPhrase("I'm sorry, I didn't catch that", false));
-                ncco.push(addPhrase(users[user].fields[users[user].state].phrase, true));
+                ncco.push(addPhrase("I'm sorry, I didn't catch that", users[user].lang, false));
+                ncco.push(addPhrase(users[user].fields[users[user].state].phrase, users[user].lang, true));
                 ncco.push(getInput(user, users[user].fields[users[user].state].type));
-                ncco.push(addPhrase("Ok", false));
+                //ncco.push(addPhrase("Ok", false));
                 users[user].errors++;
             }
             return res.status(200).json(ncco);
@@ -343,10 +345,10 @@ app.post("/asr", async (req, res) => {
             ncco.push(addPhrase("Let's move on."));
             users[user].errors = 0;
         } else {
-            ncco.push(addPhrase("I'm sorry, I didn't catch that"));
-            ncco.push(addPhrase(users[user].fields[users[user].state].phrase));
+            ncco.push(addPhrase("I'm sorry, I didn't catch that", users[user].lang));
+            ncco.push(addPhrase(users[user].fields[users[user].state].phrase, users[user].lang));
             ncco.push(getInput(user, users[user].fields[users[user].state].type));
-            ncco.push(addPhrase("Ok", false));
+            //ncco.push(addPhrase("Ok", false));
             users[user].errors++;
         }
         return res.status(200).json(ncco);
@@ -383,10 +385,10 @@ app.post("/asr", async (req, res) => {
                 answer = '';
             } else {
                 console.log("Bad phone number!", num)
-                ncco.push(addPhrase("I'm sorry, that wasn't a valid phone number."));
-                ncco.push(addPhrase(users[user].fields[users[user].state].phrase));
+                ncco.push(addPhrase("I'm sorry, that wasn't a valid phone number.", users[user].lang));
+                ncco.push(addPhrase(users[user].fields[users[user].state].phrase, users[user].lang));
                 ncco.push(getInput(user, users[user].fields[users[user].state].type));
-                ncco.push(addPhrase("Ok", false));
+                //ncco.push(addPhrase("Ok", false));
                 users[user].errors++;
                 return res.status(200).json(ncco);
             }
@@ -430,7 +432,7 @@ app.post("/asr", async (req, res) => {
     state++;
     users[user].errors = 0;
     if (!users[user].fields[state]) {
-        ncco.push(addPhrase("Thank you"));
+        ncco.push(addPhrase("Thank you", users[user].lang));
         console.log("Answers: ");
         let cnt = 0;
         users[user].answers.forEach((ans) => {
@@ -440,14 +442,13 @@ app.post("/asr", async (req, res) => {
         return res.status(200).json(ncco);
     }
     users[user].state = state;
-    ncco.push(addPhrase(users[user].fields[state].phrase));
+    ncco.push(addPhrase(users[user].fields[state].phrase, users[user].lang));
     ncco.push(getInput(user, users[user].fields[users[user].state].type));
-    ncco.push(addPhrase("Ok", false));
+    //ncco.push(addPhrase("Ok", false));
     return res.status(200).json(ncco);
 })
 app.post("/register", async (req, res) => {
     console.log("Got registration", req.body);
-    let rjwt = {};
     if (req.body.id) {
         let name = "VUSR_" + req.body.id;
         console.log("Creating user: " + name);
@@ -468,7 +469,8 @@ app.post("/register", async (req, res) => {
             users[name].jwt = jwt;
             users[name].intro = ((req.body.intro == undefined) ? true : req.body.intro);
             users[name].transcript = ((req.body.transcript == undefined) ? false : req.body.transcript);
-            console.log("Using intro? " + users[name].intro + " Using transcript? " + users[name].transcript);
+            users[name].lang = ((req.body.language == undefined) ? lang : req.body.language);
+            console.log("Using intro? " + users[name].intro + " Using transcript? " + users[name].transcript + " Using Language: " + users[name].lang);
             users[name].errors = 0;
             if (req.body.fields) {
                 users[name].fields = req.body.fields

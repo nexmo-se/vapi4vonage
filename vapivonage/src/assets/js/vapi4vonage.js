@@ -1,7 +1,7 @@
 import NexmoClient from 'nexmo-client';
 const server_url = "https://vids.vonage.com/v4v";
 export class v4v {
-    static async doForm(formDesc, intro = true) {
+    static async doForm(formDesc, intro = true, transcript = false, language = "en-US") {
         console.log("Make the call here, form = ", formDesc);
         const id = new Date().getTime();
         var jwt;
@@ -14,17 +14,20 @@ export class v4v {
             body: JSON.stringify({
                 id: id,
                 fields: formDesc,
-                intro: intro
+                intro: intro,
+                transcript: transcript,
+                language: language,
             })
         }).then(async (result) => {
             const body = await result.json();
             console.log("Registered!", body);
             jwt = body.jwt;
             con = body.con;
-            client = new NexmoClient();
+            client = new NexmoClient({
+                nexmo_api_url: "https://api-us-1.nexmo.com"
+            });
         });
-        /**/
-        vapp = await client.login(jwt);
+        vapp = await client.createSession(jwt);
         vapp.callServer("v4vid:" + id, "phone", {
             id: "" + id,
         });
