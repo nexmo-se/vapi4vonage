@@ -1,14 +1,18 @@
 import NexmoClient from 'nexmo-client';
 const server_url = "https://vids.vonage.com/v4v";
 export class v4v {
-    static async doForm(formDesc, intro = true, transcript = false, language = "en-US") {
+    static async doForm(formDesc, intro = true, transcript = null, language = "en-US") {
         function findEl(data, name) {
             var els;
-            if (data.fields.form) {
+            if (data.fields && data.fields.form) {
                 els = document.getElementById(data.fields.form).elements[name];
             } else {
                 var mels = document.getElementsByName(name);
-                els = mels[0];
+                if (mels.length) {
+                    els = mels[0];
+                } else {
+                    els = document.getElementById(name);
+                }
             }
             return els;
         }
@@ -37,7 +41,8 @@ export class v4v {
                 nexmo_api_url: "https://api-us-1.nexmo.com"
             });
         });
-        vapp = await client.createSession(jwt);
+        vapp = await client.createSession(jwt); //
+        //vapp = await client.login(jwt); //
         vapp.callServer("v4vid:" + id, "phone", {
             id: "" + id,
         });
@@ -59,11 +64,8 @@ export class v4v {
                             els = findEl(event.body, event.body.fields.countrycode);
                             if (els) {
                                 if (event.body.fields.countrycodedata) {
-                                    console.log("Selector: ", '[' + event.body.fields.countrycodedata + '="' + event.body.region + '"]');
                                     let sel = els.querySelector('[' + event.body.fields.countrycodedata + '="' + event.body.region + '"]');
-                                    console.log("Sel: ", sel);
                                     sel.selected = true;
-                                    console.log("Set to: ", sel.selected)
                                 } else {
                                     els.value = "+" + event.body.countrycode;
                                 }
@@ -79,12 +81,8 @@ export class v4v {
                             els = findEl(event.body, event.body.fields.region);
                             if (els) {
                                 if (event.body.fields.regiondata) {
-                                    console.log("Region Selector: ", '[' + event.body.fields.regiondata + '="' + event.body.region + '"]');
                                     let sel = els.querySelector('[' + event.body.fields.regiondata + '="' + event.body.region + '"]');
-                                    console.log("Region Sel: ", sel);
-                                    console.log("R Set to: ", sel.selected)
                                     sel.selected = true;
-                                    console.log("R Then Set to: ", sel.selected)
 
                                 } else {
                                     els.value = event.body.region;
@@ -100,11 +98,13 @@ export class v4v {
                             case "text":
                             case "number":
                             case "email":
+                            case "transcript":
                                 els.value = event.body.answer;
                                 break;
                             case "checkbox":
                                 els.checked = event.body.answer;
                                 break;
+                            case "submit":
                             case "button":
                                 if (event.body.answer) {
                                     els.click();
@@ -121,4 +121,3 @@ export class v4v {
         });
     }
 }
-
