@@ -175,6 +175,7 @@ async function conAdd(name, object, type) {
 }
 function addPhrase(phrase, language = lang, bargeIn = true) {
     language = "en-US";
+    bargeIn = false;
     let obj = {
         action: "talk",
         text: phrase,
@@ -190,6 +191,10 @@ function getInput(user, type = "text") {
     if (type == "email") {
         console.log("Using email context");
         context = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "@", ".com", ".org", ".net", ".edu"]
+    }
+    if (type == "text") {
+        console.log("Using text context");
+        context = ["Mark", "Berkeland", "Victor", "Shisterov", "Vonage", "VAPI"]
     }
     let obj = {
         action: 'input',
@@ -248,10 +253,16 @@ app.get("/answer", (req, res) => {
         ncco.push(tr)
     }
     if (users[user].intro) {
-        ncco.push(addPhrase("Welcome to the Vahnuhj Vahpee Form Filler."));
+        //        ncco.push(addPhrase("Welcome to the Vahnuhj Vahpee Form Filler."));
     }
-    ncco.push(addPhrase(users[user].fields[0].phrase, users[user].lang));
-    ncco.push(getInput(user, users[user].fields[0].type));
+    while (users[user].fields[users[user].state] && (users[user].fields[users[user].state].type == "speak")) {
+        ncco.push(addPhrase(users[user].fields[users[user].state].phrase, users[user].lang, true));
+        users[user].state++;
+    }
+    if (users[user].fields[users[user].state]) {
+        ncco.push(addPhrase(users[user].fields[users[user].state].phrase, users[user].lang, true));
+        ncco.push(getInput(user, users[user].fields[users[user].state].type));
+    }
     //ncco.push(addPhrase("Ok", false));
     console.log("Answer ncco returned: ", ncco)
     return res.status(200).json(ncco);
@@ -293,18 +304,32 @@ app.post("/transcript", (req, res) => {
         console.log("Invalid transcript user")
         return res.status(200).end();
     }
-    /*
 
-let accessToken = vonage.generateJwt();
-request.get(req.body.transcription_url, {
-    headers: {
-        'Authorization': 'Bearer ' + accessToken,
-        "content-type": "application/json",
-    },
-    json: true,
-}, function (error, response, body) {
-    console.log("Transcript (length = " + body.channels.length + "): ", body.channels[0].transcript)
-})
+    let accessToken = vonage.generateJwt();
+    request.get(req.body.transcription_url, {
+        headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            "content-type": "application/json",
+        },
+        json: true,
+    }, function (error, response, body) {
+        console.log("Transcript (length = " + body.channels.length + "): ", body.channels[0].transcript[0].sentence)
+        console.log("Sending to: " + users[user].transcript)
+        if (users[user].transcript) {
+            if (body.channels[0].transcript.length) {
+                let msg = '';
+                body.channels[0].transcript.forEach(obj => {
+                    msg += obj.sentence + "\r\n";
+                });
+                let obj = {};
+                obj.name = users[user].transcript;
+                obj.type = "transcript";
+                obj.answer = msg;
+                conAdd(user, obj, "custom:v4v");
+            }
+        }
+    })
+    /*
 vonage.files.save(req.body.transcription_url, "./" + user + ".txt", (err, res) => {
 if (err) { console.error("Transcription error", err); }
 else {
@@ -313,6 +338,7 @@ else {
 }
 )
 */
+
     return res.status(200).end();
 })
 app.post("/asr", async (req, res) => {
@@ -442,9 +468,15 @@ app.post("/asr", async (req, res) => {
         return res.status(200).json(ncco);
     }
     users[user].state = state;
-    ncco.push(addPhrase(users[user].fields[state].phrase, users[user].lang));
-    ncco.push(getInput(user, users[user].fields[users[user].state].type));
-    //ncco.push(addPhrase("Ok", false));
+    while (users[user].fields[users[user].state] && (users[user].fields[users[user].state].type == "speak")) {
+        console.log("Pushing speak: " + users[user].fields[users[user].state].phrase);
+        ncco.push(addPhrase(users[user].fields[users[user].state].phrase, users[user].lang, true));
+        users[user].state++;
+    }
+    if (users[user].fields[users[user].state]) {
+        ncco.push(addPhrase(users[user].fields[state].phrase, users[user].lang));
+        ncco.push(getInput(user, users[user].fields[users[user].state].type));
+    }
     return res.status(200).json(ncco);
 })
 app.post("/register", async (req, res) => {
@@ -468,7 +500,7 @@ app.post("/register", async (req, res) => {
             }
             users[name].jwt = jwt;
             users[name].intro = ((req.body.intro == undefined) ? true : req.body.intro);
-            users[name].transcript = ((req.body.transcript == undefined) ? false : req.body.transcript);
+            users[name].transcript = ((req.body.transcript == undefined) ? null : req.body.transcript);
             users[name].lang = ((req.body.language == undefined) ? lang : req.body.language);
             console.log("Using intro? " + users[name].intro + " Using transcript? " + users[name].transcript + " Using Language: " + users[name].lang);
             users[name].errors = 0;
