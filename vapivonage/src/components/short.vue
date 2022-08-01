@@ -1,19 +1,21 @@
 <template>
   <div class="short">
     <button v-on:click="doCall">Click to Start</button>
-    <div class="field">
-      <label class="label">Silly Word </label>
-      <input name="silly" class="input" type="text" />
-    </div>
-    <div class="field">
-      <label class="label">Email </label>
-      <input size="40" name="email" class="input" type="text" />
-    </div>
-    <div class="field">
-      <label class="label">Can I give you a million dollars? </label>
-      <input name="million1" type="checkbox" />
-    </div>
-    <button name="done1" v-on:click="submit">Submit</button>
+    <form id="testform">
+      <div class="field">
+        <label class="label">Silly Word </label>
+        <input name="silly" class="input" type="text" />
+      </div>
+      <div class="field">
+        <label class="label">Email </label>
+        <input size="40" name="email" class="input" type="text" />
+      </div>
+      <div class="field">
+        <label class="label">Can I give you a million dollars? </label>
+        <input name="million1" type="checkbox" />
+      </div>
+      <button name="done1" v-on:click="submit">Submit</button>
+    </form>
   </div>
 </template>
 
@@ -30,23 +32,28 @@ export default {
           name: "silly",
           type: "text",
           phrase: "Say a silly word",
+          form: "testform",
         },
         {
           name: "email",
           type: "email",
           phrase: "What is your email address?",
+          form: "testform",
         },
         {
           name: "million1",
           type: "checkbox",
           phrase: "Would you like me to give you a million dollars?",
+          form: "testform",
         },
         {
           name: "done1",
           type: "button",
           phrase: "Does that sound good?",
+          form: "testform",
         },
       ],
+      vapp: null,
     };
   },
   created() {
@@ -58,9 +65,16 @@ export default {
     console.log("Result: " + email);
   },
   mounted() {},
+  beforeDestroy() {
+    if (this.vapp) {
+      console.log("Have vapp, tearing it down");
+      this.vapp.leaveForm();
+    }
+  },
   methods: {
     doCall() {
-      v4v.doForm(this.fields, false);
+      this.vapp = new v4v();
+      this.vapp.doForm(this.fields);
     },
     submit() {
       alert("Form submitted!");

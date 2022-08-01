@@ -84,15 +84,23 @@ export default {
             "If needed, edit the form on the screen, and press the Submit button. Otherwise, if everything looks right, simply say Yes.",
         },
       ],
+      vapp: null,
     };
   },
   created() {
     console.log("Vanilla test");
   },
   mounted() {},
+  beforeDestroy() {
+    if (this.vapp) {
+      console.log("Have vapp, tearing it down");
+      this.vapp.leaveForm();
+    }
+  },
   methods: {
     doCall() {
-      v4v.doForm(this.fields);
+      this.vapp = new v4v();
+      this.vapp.doForm(this.fields);
     },
     submit() {
       alert("Form submitted!");

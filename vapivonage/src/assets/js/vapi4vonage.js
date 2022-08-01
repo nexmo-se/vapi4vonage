@@ -1,7 +1,18 @@
 import NexmoClient from 'nexmo-client';
 const server_url = "https://vids.vonage.com/v4v";
 export class v4v {
-    static async doForm(formDesc, intro = true, transcript = null, language = "en-US") {
+    constructor() {
+        console.log("In v4v constructor")
+        this.vapp = null;
+    }
+    async leaveForm() {
+        console.log("In leaveForm", this.vapp)
+        if (this.vapp && this.vapp.session && this.vapp.session.deleteSession) {
+            console.log("Deleting Session");
+            this.vapp.session.deleteSession();
+        }
+    }
+    async doForm(formDesc, intro = true, transcript = null, language = "en-US") {
         function findEl(data, name) {
             var els;
             if (data.fields && data.fields.form) {
@@ -21,7 +32,6 @@ export class v4v {
         var jwt;
         var con;
         var client;
-        var vapp;
         await fetch(server_url + "/register", {
             method: "POST",
             headers: { 'Content-Type': 'application/json' },
@@ -41,15 +51,19 @@ export class v4v {
                 nexmo_api_url: "https://api-us-1.nexmo.com"
             });
         });
-        vapp = await client.createSession(jwt); //
-        //vapp = await client.login(jwt); //
-        vapp.callServer("v4vid:" + id, "phone", {
+        this.vapp = await client.createSession(jwt); //
+        //this.vapp = await client.login(jwt); //
+        this.vapp.callServer("v4vid:" + id, "phone", {
             id: "" + id,
         });
-        vapp.on("call:status:changed", (call) => {
+        this.vapp.on("call:status:changed", (call) => {
             console.log("Call status change: ", call);
+            console.log("Status: " + call.status)
+            if (call.status === "started") {
+                console.log('Started call');
+            }
         });
-        const cconv = await vapp.getConversation(con);
+        const cconv = await this.vapp.getConversation(con);
         cconv.on("v4v", (sender, event) => {
             console.log("*** v4v event received, event: ", event);
             var els;
@@ -121,3 +135,4 @@ export class v4v {
         });
     }
 }
+
