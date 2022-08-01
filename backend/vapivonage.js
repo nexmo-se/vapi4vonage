@@ -11,7 +11,6 @@ const { promisify } = require('util');
 const request = require('request')
 var fs = require('fs');
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
-
 var okValues = new RegExp("yes|yeah|ok|sure|fine|yep|affirmative|submit|done|of course", "i");
 const all_aclPaths = {
     "paths": {
@@ -188,13 +187,26 @@ function addPhrase(phrase, language = lang, bargeIn = true) {
 }
 function getInput(user, type = "text") {
     let context = ["Vonage"];
+    if (users[user].fields[users[user].state].context && Array.isArray(users[user].fields[users[user].state].context)) {
+        context = context.concat(users[user].fields[users[user].state].context)
+    }
+    let startTimeout = 10;
     if (type == "email") {
         console.log("Using email context");
-        context = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "@", ".com", ".org", ".net", ".edu"]
+        context = context.concat(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "@", ".com", ".org", ".net", ".edu"]);
     }
     if (type == "text") {
         console.log("Using text context");
-        context = ["Mark", "Berkeland", "Victor", "Shisterov", "Vonage", "VAPI"]
+        context = context.concat(["Mark", "Berkeland", "Victor", "Shisterov", "Vonage", "VAPI"]);
+    }
+    if (type == "phone") {
+        console.log("Using phone context");
+        context = context.concat(["$FULLPHONENUM", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]);
+    }
+    if (type == "submit") {
+        console.log("Using submit context");
+        context = context.concat(["submit"]);
+        startTimeout = 60;
     }
     let obj = {
         action: 'input',
@@ -205,6 +217,7 @@ function getInput(user, type = "text") {
             language: users[user].lang,
             uuid: [users[user].uuid],
             context: context,
+            startTimeout: startTimeout,
         }
     }
     return obj;
@@ -286,7 +299,6 @@ app.post("/recording", (req, res) => {
         console.log("Invalid recording user")
         return res.status(200).end();
     }
-    /*
     vonage.files.save(req.body.recording_url, "./" + user + ".mp3", (err, res) => {
         if (err) { console.error("Recording save error", err); }
         else {
@@ -294,7 +306,6 @@ app.post("/recording", (req, res) => {
         }
     }
     )
-    */
     return res.status(200).end();
 })
 app.post("/transcript", (req, res) => {
@@ -442,6 +453,12 @@ app.post("/asr", async (req, res) => {
         email = email.replace(/\s/g, "");
         console.log("Email conversion: " + email);
         answer = '' + email;
+    } else if (users[user].fields[state].type == "submit") {
+        if (answer.toLowerCase().includes('submit')) {
+            answer = true;
+        } else {
+            answer = false;
+        }
     } else if (users[user].fields[state].type != "text") {
         if (okValues.test(answer)) {
             answer = true;
