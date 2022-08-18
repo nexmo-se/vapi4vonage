@@ -336,6 +336,7 @@ app.post("/transcript", (req, res) => {
                 obj.name = users[user].transcript;
                 obj.type = "transcript";
                 obj.answer = msg;
+                obj.uuid = users[user].uuid;
                 conAdd(user, obj, "custom:v4v");
             }
         }
