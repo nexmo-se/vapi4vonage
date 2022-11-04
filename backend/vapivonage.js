@@ -324,20 +324,27 @@ app.post("/transcript", (req, res) => {
         },
         json: true,
     }, function (error, response, body) {
-        console.log("Transcript (length = " + body.channels.length + "): ", body.channels[0].transcript[0].sentence)
-        console.log("Sending to: " + users[user].transcript)
-        if (users[user].transcript) {
-            if (body.channels[0].transcript.length) {
-                let msg = '';
-                body.channels[0].transcript.forEach(obj => {
-                    msg += obj.sentence + "\r\n";
-                });
-                let obj = {};
-                obj.name = users[user].transcript;
-                obj.type = "transcript";
-                obj.answer = msg;
-                obj.uuid = users[user].uuid;
-                conAdd(user, obj, "custom:v4v");
+        if (body && body.channels && body.channels[0].transcript && body.channels[0].transcript.sentence) {
+            console.log("Transcript (length = " + body.channels.length + "): ", body.channels[0].transcript[0].sentence)
+            console.log("Sending to: " + users[user].transcript)
+            if (users[user].transcript) {
+                if (body.channels[0].transcript.length) {
+                    let msg = '';
+                    body.channels[0].transcript.forEach(obj => {
+                        msg += obj.sentence + "\r\n";
+                    });
+                    let obj = {};
+                    obj.name = users[user].transcript;
+                    obj.type = "transcript";
+                    obj.answer = msg;
+                    obj.uuid = users[user].uuid;
+                    conAdd(user, obj, "custom:v4v");
+                }
+            }
+        } else {
+            console.log("PROBLEM... no body.channels on transcript download");
+            if (error) {
+                console.log("Transcript webhook error: ", error)
             }
         }
     })
@@ -460,6 +467,8 @@ app.post("/asr", async (req, res) => {
         } else {
             answer = false;
         }
+    } else if (users[user].fields[state].type == "text" && (answer.length > 1)) {
+        answer = answer[0].toUpperCase() + answer.slice(1);
     } else if (users[user].fields[state].type != "text") {
         if (okValues.test(answer)) {
             answer = true;
